@@ -30,47 +30,61 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-       const jobsCollection = client.db('solosphere').collection('jobs')
-       const bidsCollection = client.db('solosphere').collection('bids')
-       
+        const jobsCollection = client.db('solosphere').collection('jobs')
+        const bidsCollection = client.db('solosphere').collection('bids')
+
         // Get all jobs data form db 
-       app.get('/jobs', async(req, res)=>{
-        const result = await jobsCollection.find().toArray();
-        res.send(result);
-       })
+        app.get('/jobs', async (req, res) => {
+            const result = await jobsCollection.find().toArray();
+            res.send(result);
+        })
         // Get Signle data form db 
-        app.get('/job/:id',  async(req, res)=>{
+        app.get('/job/:id', async (req, res) => {
             const id = req.params.id;
-            const query = { _id: new ObjectId(id)}
+            const query = { _id: new ObjectId(id) }
             const result = await jobsCollection.findOne(query)
             res.send(result)
         })
 
         // save a bid data in db
-        app.post('/bid', async(req, res)=>{
+        app.post('/bid', async (req, res) => {
             const bidData = req.body;
-            const result =await bidsCollection.insertOne(bidData);
+            const result = await bidsCollection.insertOne(bidData);
             res.send(result)
         })
 
         // save a job data in db
-        app.post('/job', async(req, res)=>{
+        app.post('/job', async (req, res) => {
             const jobData = req.body;
-            const result =await jobsCollection.insertOne(jobData);
+            const result = await jobsCollection.insertOne(jobData);
             res.send(result)
         })
         // Get all jobs posted by specific user
-        app.get('/jobs/:email', async(req, res)=>{
+        app.get('/jobs/:email', async (req, res) => {
             const email = req.params.email;
-            const query = {'buyer.email': email}
+            const query = { 'buyer.email': email }
             const result = await jobsCollection.find(query).toArray()
             res.send(result)
         })
         // Delete a job  data from db 
-        app.delete('/job/:id', async(req, res)=>{
+        app.delete('/job/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id: new ObjectId(id)};
+            const query = { _id: new ObjectId(id) };
             const result = await jobsCollection.deleteOne(query)
+            res.send(result)
+        })
+        // update a job in db
+        app.put('/job/:id',  async (req, res) => {
+            const id = req.params.id
+            const jobData = req.body
+            const query = { _id: new ObjectId(id) }
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: {
+                    ...jobData,
+                },
+            }
+            const result = await jobsCollection.updateOne(query, updateDoc, options)
             res.send(result)
         })
 
@@ -80,7 +94,7 @@ async function run() {
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
-     
+
     }
 }
 run().catch(console.dir);
